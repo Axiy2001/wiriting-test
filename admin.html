@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta charset="UTF-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+   <title>Admin Panel - Writing Test</title>
+   <link rel="stylesheet" href="./css/style.css" />
+</head>
+
+<body>
+   <div class="container admin-page">
+      <div class="card">
+         <h1>Ustoz Paneli</h1>
+         <p>O'qivchilar uchun Writing Task yaratish paneli</p>
+
+         <form id="taskForm" class="form">
+            <div class="form-group">
+               <label for="title">Title</label>
+               <input type="text" id="title" placeholder="Enter writing title" required />
+            </div>
+
+            <div class="form-group">
+               <label for="instruction">Instruction</label>
+               <textarea id="instruction" rows="3" placeholder="Enter instruction..." required></textarea>
+            </div>
+
+            <div class="form-group">
+               <label for="question">Savollar</label>
+               <textarea id="question" rows="5" placeholder="Enter writing question..." required></textarea>
+            </div>
+
+            <div class="form-group">
+               <label for="image">Rasm yuklash</label>
+               <input type="file" id="image" accept="image/*" />
+            </div>
+
+            <div class="form-group">
+               <label for="duration">Vaqt (minutda)</label>
+               <input type="number" id="duration" min="1" value="60" required />
+            </div>
+
+            <div class="form-actions">
+               <button type="submit">Task ni saqlash</button>
+               <button type="button" id="clearTaskBtn">Task ni tozalash</button>
+            </div>
+         </form>
+
+         <div id="message" class="message"></div>
+      </div>
+
+      <div class="card preview-card">
+         <h2>Saved Task Preview</h2>
+         <div id="previewContent">
+            <p>No task saved yet.</p>
+         </div>
+      </div>
+   </div>
+
+   <script src="./js/storage.js"></script>
+   <script src="./js/admin.js"></script>
+</body>
+
+</html>
