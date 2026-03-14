@@ -34,11 +34,22 @@ function loadSavedUser() {
    }
 }
 
-startForm.addEventListener("submit", function (event) {
+async function getTaskFromServer() {
+   try {
+      const response = await fetch("/.netlify/functions/get-task");
+      const task = await response.json();
+      return task;
+   } catch (error) {
+      console.log("Get task error:", error);
+      return null;
+   }
+}
+
+startForm.addEventListener("submit", async function (event) {
    event.preventDefault();
 
    const userName = userNameInput.value.trim();
-   const writingTask = getFromStorage(STORAGE_KEYS.writingTask);
+   const writingTask = await getTaskFromServer();
 
    if (!userName) {
       showStartMessage("Iltimos, FIO kiriting.");
