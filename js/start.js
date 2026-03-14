@@ -1,6 +1,25 @@
 const startForm = document.getElementById("startForm");
 const userNameInput = document.getElementById("userName");
 const startMessage = document.getElementById("startMessage");
+const adminBtn = document.getElementById("adminBtn");
+
+const ADMIN_PASSWORD = "12345";
+
+if (adminBtn) {
+   adminBtn.addEventListener("click", () => {
+      const password = prompt("Admin parolini kiriting");
+
+      if (password === null) {
+         return;
+      }
+
+      if (password === ADMIN_PASSWORD) {
+         window.location.href = "./admin.html";
+      } else {
+         alert("Noto'g'ri parol");
+      }
+   });
+}
 
 function showStartMessage(text, type = "danger") {
    startMessage.textContent = text;

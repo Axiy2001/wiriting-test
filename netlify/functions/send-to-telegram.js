@@ -25,16 +25,19 @@ export default async (req, context) => {
          );
       }
 
-      const text = ` Writing Exam Result
+      const text = `📚 Writing Exam Result
 
-User: ${data.name}
-Task: ${data.title}
-Ishlatilingan vaqt: ${data.timeUsed} seconds
-Auto Submitted: ${data.autoSubmitted ? "Yes" : "No"}
+👤 User: ${data.name}
+⏱ Ishlatilgan vaqt: ${data.timeUsed} seconds
+⚠ Auto Submitted: ${data.autoSubmitted ? "Yes" : "No"}
 
-Answer:
+📝 Part 1: ${data.part1?.title || "Part 1"}
 
-${data.answer}`;
+${data.part1?.answer || "Javob yozilmagan."}
+
+📝 Part 2: ${data.part2?.title || "Part 2"}
+
+${data.part2?.answer || "Javob yozilmagan."}`;
 
       const telegramResponse = await fetch(
          `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,

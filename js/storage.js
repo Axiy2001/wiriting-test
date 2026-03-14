@@ -1,7 +1,7 @@
 const STORAGE_KEYS = {
    writingTask: "writingTask",
    currentUser: "currentUser",
-   draftAnswer: "draftAnswer",
+   writingDraft: "writingDraft",
    lastSubmission: "lastSubmission",
 };
 

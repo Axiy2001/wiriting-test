@@ -11,113 +11,211 @@ const timerEl = document.getElementById("timer");
 
 const answerBox = document.getElementById("answerBox");
 const wordCountEl = document.getElementById("wordCount");
+const wordWarningEl = document.getElementById("wordWarning");
+const saveStatusEl = document.getElementById("saveStatus");
+
+const part1TabBtn = document.getElementById("part1TabBtn");
+const part2TabBtn = document.getElementById("part2TabBtn");
 const submitBtn = document.getElementById("submitBtn");
 
-let timeLeft = task.duration * 60;
+let activePart = 1;
+let timeLeft = 0;
 let timerInterval;
+let saveStatusTimeout = null;
 
 initExam();
 
 function initExam() {
-
    if (!task || !user) {
       alert("Exam data missing");
       window.location.href = "./index.html";
       return;
    }
 
-   titleEl.textContent = task.title;
-   instructionEl.textContent = task.instruction;
-   questionEl.textContent = task.question;
-
    userNameEl.textContent = user.name;
 
-   if (task.image) {
-      imageEl.src = task.image;
+   const savedDraft = getFromStorage(STORAGE_KEYS.writingDraft);
+
+   if (savedDraft && typeof savedDraft.remaining === "number") {
+      timeLeft = savedDraft.remaining;
+   } else {
+      timeLeft = task.duration * 60;
    }
 
+   renderCurrentPart();
+   loadCurrentAnswer();
+   updateWordInfo(answerBox.value);
+   updateTimerDisplay();
    startTimer();
 }
 
+function getDraft() {
+   const savedDraft = getFromStorage(STORAGE_KEYS.writingDraft);
+
+   return savedDraft || {
+      part1: "",
+      part2: "",
+      remaining: task.duration * 60
+   };
+}
+
+function showSaveStatus(text) {
+   saveStatusEl.textContent = text;
+
+   if (saveStatusTimeout) {
+      clearTimeout(saveStatusTimeout);
+   }
+
+   saveStatusTimeout = setTimeout(() => {
+      saveStatusEl.textContent = "Saved ✓";
+   }, 700);
+}
+
+function saveCurrentPartDraft() {
+   const draft = getDraft();
+
+   if (activePart === 1) {
+      draft.part1 = answerBox.value;
+   } else {
+      draft.part2 = answerBox.value;
+   }
+
+   draft.remaining = timeLeft;
+
+   saveToStorage(STORAGE_KEYS.writingDraft, draft);
+   showSaveStatus("Saving...");
+}
+
+function loadCurrentAnswer() {
+   const draft = getDraft();
+
+   if (activePart === 1) {
+      answerBox.value = draft.part1 || "";
+   } else {
+      answerBox.value = draft.part2 || "";
+   }
+}
+
+function renderCurrentPart() {
+   const currentPart = activePart === 1 ? task.part1 : task.part2;
+
+   titleEl.textContent = currentPart.title;
+   instructionEl.textContent = currentPart.instruction;
+   questionEl.textContent = currentPart.question;
+
+   if (currentPart.image) {
+      imageEl.src = currentPart.image;
+      imageEl.style.display = "block";
+   } else {
+      imageEl.removeAttribute("src");
+      imageEl.style.display = "none";
+   }
+
+   part1TabBtn.classList.toggle("active-part-btn", activePart === 1);
+   part2TabBtn.classList.toggle("active-part-btn", activePart === 2);
+}
+
+function switchPart(partNumber) {
+   saveCurrentPartDraft();
+
+   activePart = partNumber;
+
+   renderCurrentPart();
+   loadCurrentAnswer();
+   updateWordInfo(answerBox.value);
+}
+
+function updateWordInfo(text) {
+   const trimmedText = text.trim();
+   const words = trimmedText === "" ? 0 : trimmedText.split(/\s+/).length;
+
+   const minWords = activePart === 1 ? 150 : 250;
+
+   wordCountEl.textContent = `Words: ${words}`;
+
+   if (words < minWords) {
+      wordWarningEl.textContent = `⚠ Recommended minimum: ${minWords} words`;
+      wordWarningEl.style.color = "#ef4444";
+   } else {
+      wordWarningEl.textContent = "✔ Good length";
+      wordWarningEl.style.color = "#22c55e";
+   }
+}
+
+function updateTimerDisplay() {
+   const minutes = Math.floor(timeLeft / 60);
+   const seconds = timeLeft % 60;
+
+   timerEl.textContent = `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+}
+
 function startTimer() {
-
    timerInterval = setInterval(() => {
-
       timeLeft--;
 
-      const minutes = Math.floor(timeLeft / 60);
-      const seconds = timeLeft % 60;
+      if (timeLeft < 0) {
+         timeLeft = 0;
+      }
 
-      timerEl.textContent =
-         `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+      const draft = getDraft();
+      draft.remaining = timeLeft;
+      saveToStorage(STORAGE_KEYS.writingDraft, draft);
+
+      updateTimerDisplay();
 
       if (timeLeft <= 0) {
          clearInterval(timerInterval);
          submitExam(true);
       }
-
    }, 1000);
-
 }
 
 answerBox.addEventListener("input", () => {
-
-   const text = answerBox.value.trim();
-
-   const words = text === ""
-      ? 0
-      : text.split(/\s+/).length;
-
-   wordCountEl.textContent = `Words: ${words}`;
-
-   saveDraft(text);
-
+   updateWordInfo(answerBox.value);
+   saveCurrentPartDraft();
 });
 
-function saveDraft(text) {
+part1TabBtn.addEventListener("click", () => {
+   switchPart(1);
+});
 
-   const draft = {
-      text: text,
-      remaining: timeLeft
-   };
-
-   saveToStorage(STORAGE_KEYS.draftAnswer, draft);
-
-}
+part2TabBtn.addEventListener("click", () => {
+   switchPart(2);
+});
 
 submitBtn.addEventListener("click", () => {
    submitExam(false);
 });
 
 async function submitExam(auto = false) {
-
    clearInterval(timerInterval);
 
-   const answer = answerBox.value;
+   saveCurrentPartDraft();
+
+   const draft = getDraft();
 
    const submission = {
-
       name: user.name,
-
-      title: task.title,
-
-      answer: answer,
-
       autoSubmitted: auto,
-
-      timeUsed:
-         (task.duration * 60 - timeLeft)
-
+      timeUsed: task.duration * 60 - timeLeft,
+      taskDuration: task.duration,
+      part1: {
+         title: task.part1.title,
+         answer: draft.part1 || ""
+      },
+      part2: {
+         title: task.part2.title,
+         answer: draft.part2 || ""
+      }
    };
 
    saveToStorage(STORAGE_KEYS.lastSubmission, submission);
 
    await sendToTelegram(submission);
 
-   removeFromStorage(STORAGE_KEYS.draftAnswer);
+   removeFromStorage(STORAGE_KEYS.writingDraft);
 
    window.location.href = "./result.html";
-
 }
 
 async function sendToTelegram(data) {
