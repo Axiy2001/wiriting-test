@@ -1,4 +1,3 @@
-const task = getFromStorage(STORAGE_KEYS.writingTask);
 const user = getFromStorage(STORAGE_KEYS.currentUser);
 
 const titleEl = document.getElementById("taskTitle");
@@ -18,6 +17,7 @@ const part1TabBtn = document.getElementById("part1TabBtn");
 const part2TabBtn = document.getElementById("part2TabBtn");
 const submitBtn = document.getElementById("submitBtn");
 
+let task = null;
 let activePart = 1;
 let timeLeft = 0;
 let timerInterval;
@@ -25,9 +25,17 @@ let saveStatusTimeout = null;
 
 initExam();
 
-function initExam() {
-   if (!task || !user) {
-      alert("Exam data missing");
+async function initExam() {
+   if (!user) {
+      alert("User ma'lumoti topilmadi");
+      window.location.href = "./index.html";
+      return;
+   }
+
+   task = await getTaskFromServer();
+
+   if (!task) {
+      alert("Task topilmadi. Iltimos admin panelda task yarating.");
       window.location.href = "./index.html";
       return;
    }
@@ -47,6 +55,17 @@ function initExam() {
    updateWordInfo(answerBox.value);
    updateTimerDisplay();
    startTimer();
+}
+
+async function getTaskFromServer() {
+   try {
+      const response = await fetch("/.netlify/functions/get-task");
+      const task = await response.json();
+      return task;
+   } catch (error) {
+      console.log("Get task error:", error);
+      return null;
+   }
 }
 
 function getDraft() {

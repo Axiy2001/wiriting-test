@@ -18,13 +18,57 @@ const previewContent = document.getElementById("previewContent");
 let selectedPart1ImageBase64 = "";
 let selectedPart2ImageBase64 = "";
 
+initAdmin();
+
+async function initAdmin() {
+   await loadTaskIntoForm();
+   await renderPreview();
+}
+
 function showMessage(text, type = "success") {
    messageBox.textContent = text;
    messageBox.className = `message ${type}`;
 }
 
-function renderPreview() {
-   const savedTask = getFromStorage(STORAGE_KEYS.writingTask);
+async function getTaskFromServer() {
+   try {
+      const response = await fetch("/.netlify/functions/get-task");
+      const task = await response.json();
+      return task;
+   } catch (error) {
+      console.log("Get task error:", error);
+      return null;
+   }
+}
+
+async function saveTaskToServer(task) {
+   const response = await fetch("/.netlify/functions/save-task", {
+      method: "POST",
+      headers: {
+         "Content-Type": "application/json"
+      },
+      body: JSON.stringify(task)
+   });
+
+   const result = await response.json();
+   return result;
+}
+
+async function clearTaskFromServer() {
+   const response = await fetch("/.netlify/functions/save-task", {
+      method: "POST",
+      headers: {
+         "Content-Type": "application/json"
+      },
+      body: JSON.stringify(null)
+   });
+
+   const result = await response.json();
+   return result;
+}
+
+async function renderPreview() {
+   const savedTask = await getTaskFromServer();
 
    if (!savedTask) {
       previewContent.innerHTML = `<p>Task hali saqlanmadi.</p>`;
@@ -58,8 +102,8 @@ function renderPreview() {
    `;
 }
 
-function loadTaskIntoForm() {
-   const savedTask = getFromStorage(STORAGE_KEYS.writingTask);
+async function loadTaskIntoForm() {
+   const savedTask = await getTaskFromServer();
 
    if (!savedTask) return;
 
@@ -103,7 +147,7 @@ handleImageChange(part2ImageInput, function (result) {
    selectedPart2ImageBase64 = result;
 });
 
-taskForm.addEventListener("submit", function (event) {
+taskForm.addEventListener("submit", async function (event) {
    event.preventDefault();
 
    const task = {
@@ -124,26 +168,34 @@ taskForm.addEventListener("submit", function (event) {
       }
    };
 
-   saveToStorage(STORAGE_KEYS.writingTask, task);
-   showMessage("Task saqlandi!");
-   renderPreview();
+   try {
+      await saveTaskToServer(task);
+      showMessage("Task saqlandi!");
+      await renderPreview();
+   } catch (error) {
+      console.log("Save task error:", error);
+      showMessage("Taskni saqlashda xatolik yuz berdi.", "danger");
+   }
 });
 
-clearTaskBtn.addEventListener("click", function () {
-   removeFromStorage(STORAGE_KEYS.writingTask);
-   removeFromStorage(STORAGE_KEYS.writingDraft);
-   removeFromStorage(STORAGE_KEYS.lastSubmission);
+clearTaskBtn.addEventListener("click", async function () {
+   try {
+      await clearTaskFromServer();
 
-   taskForm.reset();
-   durationInput.value = 60;
+      removeFromStorage(STORAGE_KEYS.writingDraft);
+      removeFromStorage(STORAGE_KEYS.lastSubmission);
 
-   selectedPart1ImageBase64 = "";
-   selectedPart2ImageBase64 = "";
+      taskForm.reset();
+      durationInput.value = 60;
 
-   previewContent.innerHTML = `<p>Task hali saqlanmadi.</p>`;
+      selectedPart1ImageBase64 = "";
+      selectedPart2ImageBase64 = "";
 
-   showMessage("Saved task cleared.", "danger");
+      previewContent.innerHTML = `<p>Task hali saqlanmadi.</p>`;
+
+      showMessage("Task tozalandi.", "danger");
+   } catch (error) {
+      console.log("Clear task error:", error);
+      showMessage("Taskni tozalashda xatolik yuz berdi.", "danger");
+   }
 });
-
-loadTaskIntoForm();
-renderPreview();
