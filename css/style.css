@@ -63,7 +63,6 @@ p {
   width: 100%;
   height: auto;
   display: block;
-
 }
 
 label {
@@ -298,7 +297,6 @@ button:hover {
   margin-top: 10px;
   border-radius: 16px;
   object-fit: cover;
-  max-height: 320px;
 }
 
 /* RESULT */
