@@ -156,7 +156,7 @@ button:hover {
   object-fit: cover;
   border-radius: 16px;
   margin-top: 12px;
-  height: 200px;
+
 }
 
 .start-page {
@@ -420,9 +420,9 @@ button:hover {
     width: 100%;
   }
 
-  .task-image {
+  /* .task-image {
     max-height: 240px;
-  }
+  } */
 
   .result-answer {
     padding: 16px;
