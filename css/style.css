@@ -59,6 +59,12 @@ p {
 .form-group {
   margin-bottom: 16px;
 }
+.form-group img{
+  width: 100%;
+  height: auto;
+  display: block;
+
+}
 
 label {
   display: block;
@@ -420,9 +426,9 @@ button:hover {
     width: 100%;
   }
 
-  /* .task-image {
+  .task-image {
     max-height: 240px;
-  } */
+  }
 
   .result-answer {
     padding: 16px;
