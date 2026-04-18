@@ -156,6 +156,7 @@ button:hover {
   object-fit: cover;
   border-radius: 16px;
   margin-top: 12px;
+  height: auto;
 }
 
 .start-page {
